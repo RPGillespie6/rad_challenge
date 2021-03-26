@@ -7,6 +7,7 @@
 </head>
 
 <body>
+    <!-- This is a template used by jQuery to generate new message cards -->
     <div id="card_template" class="card has-text-left mb-1" hidden>
         <div class="card-content">
             <div class="content"></div>
@@ -15,6 +16,7 @@
         </div>
     </div>
 
+    <!-- Main container -->
     <div class="container">
         <section class="section" style="height: 500px; overflow-y: scroll;">
             <div class="columns">
@@ -28,6 +30,7 @@
             </div>
         </section>
 
+        <!-- This section contains the textarea and submit buttons -->
         <section class="section">
             <article class="media">
                 <div class="media-content">
@@ -39,7 +42,7 @@
                     <nav class="level">
                         <div class="level-left">
                             <div class="level-item">
-                                <a class="button is-info" onclick="submitMessage()">Submit</a>
+                                <a id="chat_submit" class="button is-info">Submit</a>
                             </div>
                         </div>
                     </nav>
@@ -49,7 +52,7 @@
 
     </div>
 
-
+    <!-- Down here so DOM is loaded before ever invoking any JS -->
     <link rel="stylesheet" href="css/bulma.min.css">
     <link rel="stylesheet" href="css/all.min.css"> <!-- Font Awesome -->
 

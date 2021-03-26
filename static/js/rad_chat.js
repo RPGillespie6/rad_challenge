@@ -1,19 +1,38 @@
-
+// Wrap file in self calling function so we don't pollute global namespace
+(function() {
 'use strict;'
 
+// A simple jQuery extension to check if an element exists
 // https://stackoverflow.com/a/920322/2516916
 $.fn.exists = function () {
     return this.length !== 0;
 }
 
+// Freaking IE11 caches GET API calls
+// https://stackoverflow.com/a/4303862/2516916
+$.ajaxSetup({ cache: false });
+
 function insertMessage(data) {
    let m = $("#card_template").clone();
-   m.removeAttr('hidden');
-   m.attr("id", data.id);
-   m.find(".content").text(data.text);
-   m.find(".icon").attr("onclick", "vote(" + data.id + ")");
 
+   // Unhide template copy
+   m.removeAttr('hidden');
+
+   // Set id to be message if
+   m.attr("id", data.id);
+
+   // Fill in message text
+   m.find(".content").text(data.text);
+
+    // Make upvote icon clickable
+    m.find(".icon").click(function() {
+       vote(data.id)
+    });
+
+   // Add to DOM
    $("#chat_messages").append(m);
+
+   // Update upvote count next to icon
    updateUpvotes(data.id, data.upvotes);
 }
 
@@ -23,7 +42,6 @@ function submitMessage() {
     };
 
     $.post("/api/message", JSON.stringify(payload), function(data) {
-        console.log(data);
         insertMessage(data);
         $("#chat_message").val(""); // clear chat box
     });
@@ -34,7 +52,7 @@ function updateUpvotes(id, upvotes) {
 
     m.text(upvotes);
     if (upvotes === 0)
-        m.text("");
+        m.text(""); // Don't show a number if it is zero
 }
 
 function vote(id) {
@@ -42,14 +60,16 @@ function vote(id) {
         id: id
     };
 
+    // Find the icon element inside of the div
     let icon = $("#"+id).find("i");
 
+    // If user already voted...
     if (icon.hasClass("fas")) {
-        params.direction = "down";
+        params.direction = "down"; // Unvote
         icon.toggleClass("fas far");
     }
     else {
-        icon.toggleClass("far fas");
+        icon.toggleClass("far fas"); // Toggle arrow icon to be filled in
     }
 
     $.get("/api/vote", params, function(data) {
@@ -57,6 +77,7 @@ function vote(id) {
     });
 }
 
+// Blindly populate the DOM with all messages
 function populateMessages() {
     $.get("/api/messages", function(data) {
         $.each(data, function(i, value) {
@@ -66,13 +87,12 @@ function populateMessages() {
 }
 
 let last_updated = new Date();
-function updateMessages() {
+function updateMessages(last_updated) {
     let params = {
         updated_after: last_updated.toISOString()
     }
 
     $.get("/api/messages", params, function(data) {
-        console.log(data)
         if (!data)
             return;
 
@@ -93,8 +113,13 @@ function updateMessages() {
 }
 
 function init() {
+    // Bind submit click with jQuery instead of `onclick=` because this file is wrapped in a function
+    $("#chat_submit").click(submitMessage);
+
     populateMessages();
-    setInterval(updateMessages, 5000); // 5s
+    setInterval(updateMessages, 5000, last_updated); // 5s
 }
 
 init()
+
+})();
