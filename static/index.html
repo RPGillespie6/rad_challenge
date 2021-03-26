@@ -1,1 +1,60 @@
-hello world
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Rad Chat</title>
+</head>
+
+<body>
+    <div id="card_template" class="card has-text-left mb-1" hidden>
+        <div class="card-content">
+            <div class="content"></div>
+            <span class="icon is-small" style="cursor: pointer;" onclick=""><i class="far fa-arrow-alt-circle-up"></i></span>
+            <span class="upvotes"></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <section class="section" style="height: 500px; overflow-y: scroll;">
+            <div class="columns">
+                <!-- Messages go in here -->
+                <div class="column" id="chat_messages">
+                </div>
+
+                <!-- empty column -->
+                <div class="column">
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <article class="media">
+                <div class="media-content">
+                    <div class="field">
+                        <p class="control">
+                            <textarea id="chat_message" class="textarea" placeholder="Say something..."></textarea>
+                        </p>
+                    </div>
+                    <nav class="level">
+                        <div class="level-left">
+                            <div class="level-item">
+                                <a class="button is-info" onclick="submitMessage()">Submit</a>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </article>
+        </section>
+
+    </div>
+
+
+    <link rel="stylesheet" href="css/bulma.min.css">
+    <link rel="stylesheet" href="css/all.min.css"> <!-- Font Awesome -->
+
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script src="js/rad_chat.js"></script>
+</body>
+
+</html>

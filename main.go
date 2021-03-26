@@ -10,7 +10,7 @@
 
     Create a new message
 
-    - GET /api/vote?id=<uint>
+    - GET /api/vote?id=<uint>[&direction=down]
 
     Why did I choose GET here? Mainly because vanilla golang seems ill equipped to create APIs with path-based variables like: PUT /api/message/:id/vote
 
@@ -19,10 +19,13 @@
     However, there are a few other reasons I chose GET /api/vote:
     a) Ease of testing - I can test GET APIs using browser's URL bar and so I tend to favor GET for that reason
     b) Simplifies backend when you don't have to put in a bunch of conditional switching logic on method and body schema
-    c) Concurrency - if two users call GET /api/vote at the same time there is no race and the DB will be updated corerctly.
-       Not so with a naive PUT approach where you provide vote count in body
+    c) Concurrency - if two users call GET /api/vote at the same time there is no race and the DB will be updated correctly.
+       Not so with a PUT /api/message approach where you provide vote count in body
 
     Note: Reddit, Hacker News have a dedicated GET /api/vote, while StackOverflow favors something more like POST /api/message/:id/vote
+
+    Also note: anonymous commenting and voting is usually not a good idea. Anonymous voting makes vote manipulation super easy, and
+    anonymous commenting almost certainly causes content moderation headaches as the user base grows.
 */
 package main
 
@@ -42,6 +45,7 @@ type Message struct {
     Text          string   `json:"text"`
     Upvotes       int      `json:"upvotes"`      // This should be an int if downvotes or unvotes are allowed
     LastUpdated   string   `json:"last_updated"` // RFC3339 timestamp
+    // As this feature grows you probably want fields for who posted the message, who upvoted, etc.
 }
 
 // Our in-memory "database" is just a slice of messages and an incrementing id
@@ -91,10 +95,17 @@ func handleMessagePost(w http.ResponseWriter, r *http.Request) {
 func handleVote(w http.ResponseWriter, r *http.Request) {
     // Grab 'id' query parameter
     query := r.URL.Query()
+
     id_str := query.Get("id")
     if len(id_str) == 0 {
         http.Error(w, "query parameter 'id' not found", http.StatusBadRequest)
         return
+    }
+
+    vote_delta := 1
+    vote_dir := query.Get("direction")
+    if vote_dir == "down" {
+        vote_delta = -1
     }
 
     // Parse uint64 from id
@@ -122,7 +133,7 @@ func handleVote(w http.ResponseWriter, r *http.Request) {
 
     // Update message
     Messages[update_index].LastUpdated = time.Now().Format(time.RFC3339)
-    Messages[update_index].Upvotes++
+    Messages[update_index].Upvotes += vote_delta
 
     // Send response
     setJsonHeaders(w, http.StatusOK)
@@ -174,7 +185,7 @@ func main() {
     http.HandleFunc("/api/messages", getMessages)
 
     // If it's not one of the APIs, serve static file(s)
-    fs := http.FileServer(http.Dir("."))
+    fs := http.FileServer(http.Dir("static/"))
     http.Handle("/", fs)
 
     log.Println("Listening on :3000...")
